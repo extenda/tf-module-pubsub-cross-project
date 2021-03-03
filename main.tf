@@ -65,7 +65,7 @@ resource "google_pubsub_subscription_iam_member" "push_subscription_binding" {
 
 
 resource "google_pubsub_subscription" "push_subscriptions" {
-  count   = var.create_subscription ? length(var.push_subscriptions) : 0
+  count   = var.create_subscriptions ? length(var.push_subscriptions) : 0
   name    = var.push_subscriptions[count.index].name
   topic   = var.push_subscriptions[count.index].external_topic
   project = var.project_id
