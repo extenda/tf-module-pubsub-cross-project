@@ -2,7 +2,7 @@
 
 This module is intended to create subscriptions in current or external (separately specified) projects.
 
-`pull\_subscriptions` parameter supports the same keys that in original (Pubsub)[https://github.com/terraform-google-modules/terraform-google-pubsub/tree/v1.9.0] module.
+`pull\_subscriptions` parameter supports the same keys that in original [Pubsub](https://github.com/terraform-google-modules/terraform-google-pubsub/tree/v1.9.0) module.
 Additionally `service` key in `pull\_subscriptions` needs to be provided to configure subscriber permissions in the subscription for service's service account.
 
 ## Providers
