@@ -7,68 +7,82 @@ locals {
   pubsub_svc_account_email     = "service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
 
-## Publisher role to external dead letter topic
-resource "google_pubsub_topic_iam_member" "push_topic_binding_dead_letter" {
-  count   = var.create_subscriptions ? length(var.push_subscriptions) : 0
-  project = var.external_project_id
-  topic   = lookup(var.push_subscriptions[count.index], "dead_letter_topic", "")
-  role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:${local.pubsub_svc_account_email}"
-}
+# ## Publisher role to external dead letter topic
+# resource "google_pubsub_topic_iam_member" "push_topic_binding_dead_letter" {
+#   count   = var.create_subscriptions ? length(var.push_subscriptions) : 0
+#   project = var.external_project_id
+#   topic   = lookup(var.push_subscriptions[count.index], "dead_letter_topic", "")
+#   role    = "roles/pubsub.publisher"
+#   member  = "serviceAccount:${local.pubsub_svc_account_email}"
+# }
 
-resource "google_pubsub_topic_iam_member" "pull_topic_binding_dead_letter" {
-  count   = var.dead_letter_policy ? length(var.pull_subscriptions) : 0
-  project = var.external_project_id
-  topic   = lookup(var.pull_subscriptions[count.index], "dead_letter_topic", "")
-  role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:${local.pubsub_svc_account_email}"
-}
-## Subscriber role to external project's topics
-resource "google_pubsub_topic_iam_member" "pull_topic_binding" {
-  count   = var.create_subscriptions ? length(var.pull_subscriptions) : 0
-  project = var.external_project_id
-  topic   = lookup(var.pull_subscriptions[count.index], "external_topic")
-  role    = "roles/pubsub.subscriber"
-  member  = "serviceAccount:${local.pubsub_svc_account_email}"
-}
+# resource "google_pubsub_topic_iam_member" "pull_topic_binding_dead_letter" {
+#   count   = var.dead_letter_policy ? length(var.pull_subscriptions) : 0
+#   project = var.external_project_id
+#   topic   = lookup(var.pull_subscriptions[count.index], "dead_letter_topic", "")
+#   role    = "roles/pubsub.publisher"
+#   member  = "serviceAccount:${local.pubsub_svc_account_email}"
+# }
+# ## Subscriber role to external project's topics
+# resource "google_pubsub_topic_iam_member" "pull_topic_binding" {
+#   count   = var.create_subscriptions ? length(var.pull_subscriptions) : 0
+#   project = var.external_project_id
+#   topic   = lookup(var.pull_subscriptions[count.index], "external_topic")
+#   role    = "roles/pubsub.subscriber"
+#   member  = "serviceAccount:${local.pubsub_svc_account_email}"
+# }
 
-resource "google_pubsub_topic_iam_member" "push_topic_binding" {
-  count   = var.create_subscriptions ? length(var.push_subscriptions) : 0
-  project = var.external_project_id
-  topic   = lookup(var.push_subscriptions[count.index], "external_topic")
-  role    = "roles/pubsub.subscriber"
-  member  = "serviceAccount:${local.pubsub_svc_account_email}"
-}
+# resource "google_pubsub_topic_iam_member" "push_topic_binding" {
+#   count   = var.create_subscriptions ? length(var.push_subscriptions) : 0
+#   project = var.external_project_id
+#   topic   = lookup(var.push_subscriptions[count.index], "external_topic")
+#   role    = "roles/pubsub.subscriber"
+#   member  = "serviceAccount:${local.pubsub_svc_account_email}"
+# }
 
-## Subscriber role to project's topics
-resource "google_pubsub_subscription_iam_member" "pull_subscription_binding" {
+# ## Subscriber role to project's topics
+# resource "google_pubsub_subscription_iam_member" "pull_subscription_binding" {
+#   count        = var.create_subscriptions ? length(var.pull_subscriptions) : 0
+#   project      = var.project_id
+#   subscription = var.pull_subscriptions[count.index].name
+#   role         = "roles/pubsub.subscriber"
+#   member       = "serviceAccount:${local.pubsub_svc_account_email}"
+#   depends_on = [
+#     google_pubsub_subscription.pull_subscriptions,
+#   ]
+# }
+
+# resource "google_pubsub_subscription_iam_member" "push_subscription_binding" {
+#   count        = var.create_subscriptions ? length(var.push_subscriptions) : 0
+#   project      = var.project_id
+#   subscription = var.push_subscriptions[count.index].name
+#   role         = "roles/pubsub.subscriber"
+#   member       = "serviceAccount:${local.pubsub_svc_account_email}"
+#   depends_on = [
+#     google_pubsub_subscription.push_subscriptions,
+#   ]
+# }
+
+
+
+resource "google_pubsub_subscription_iam_member" "service_pull_subscription_binding" {
   count        = var.create_subscriptions ? length(var.pull_subscriptions) : 0
-  project      = var.project_id
+  project      = var.external_project_id
   subscription = var.pull_subscriptions[count.index].name
   role         = "roles/pubsub.subscriber"
-  member       = "serviceAccount:${local.pubsub_svc_account_email}"
+  member       = "serviceAccount:${var.pull_subscriptions[count.index].service}@${var.project_id}.iam.gserviceaccount.com"
   depends_on = [
     google_pubsub_subscription.pull_subscriptions,
   ]
 }
 
-resource "google_pubsub_subscription_iam_member" "push_subscription_binding" {
-  count        = var.create_subscriptions ? length(var.push_subscriptions) : 0
-  project      = var.project_id
-  subscription = var.push_subscriptions[count.index].name
-  role         = "roles/pubsub.subscriber"
-  member       = "serviceAccount:${local.pubsub_svc_account_email}"
-  depends_on = [
-    google_pubsub_subscription.push_subscriptions,
-  ]
-}
 
 
 resource "google_pubsub_subscription" "push_subscriptions" {
   count   = var.create_subscriptions ? length(var.push_subscriptions) : 0
   name    = var.push_subscriptions[count.index].name
   topic   = var.push_subscriptions[count.index].external_topic
-  project = var.project_id
+  project = var.external_project_id
   labels  = var.subscription_labels
   ack_deadline_seconds = lookup(
     var.push_subscriptions[count.index],
@@ -136,7 +150,7 @@ resource "google_pubsub_subscription" "pull_subscriptions" {
   count   = var.create_subscriptions ? length(var.pull_subscriptions) : 0
   name    = var.pull_subscriptions[count.index].name
   topic   = var.pull_subscriptions[count.index].external_topic
-  project = var.project_id
+  project = var.external_project_id
   labels  = var.subscription_labels
   ack_deadline_seconds = lookup(
     var.pull_subscriptions[count.index],
