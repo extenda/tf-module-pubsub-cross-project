@@ -7,6 +7,7 @@ module pubsub {
       ack_deadline_seconds = "60"
       external_topic       = "projects/project-x/topics/test-topic"
       dead_letter_topic    = "projects/project-x/topics/test-topic-dl"
+      service              = "service1"
      }
   ]
   project_id          = "project-y"
