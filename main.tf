@@ -76,6 +76,17 @@ resource "google_pubsub_subscription_iam_member" "service_pull_subscription_bind
   ]
 }
 
+resource "google_pubsub_subscription_iam_member" "service_pull_subscription_viewer" {
+  count        = var.create_subscriptions ? length(var.pull_subscriptions) : 0
+  project      = var.external_project_id
+  subscription = var.pull_subscriptions[count.index].name
+  role         = "roles/pubsub.viewer"
+  member       = "serviceAccount:${var.pull_subscriptions[count.index].service}@${var.project_id}.iam.gserviceaccount.com"
+  depends_on = [
+    google_pubsub_subscription.pull_subscriptions,
+  ]
+}
+
 
 
 resource "google_pubsub_subscription" "push_subscriptions" {
